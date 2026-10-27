@@ -139,7 +139,7 @@ li:nth-child(3n + 1) { clear: both; }
 
 ## 三、CSS 变量（自定义属性）
 
-CSS 变量是**运行时**的，能被 JS 读写、能参与媒体查询判断——和 Sass 编译期变量完全不同。
+CSS 变量是**运行时**的：能被 JS 随时读写、能随 DOM 继承、能在 `@media` 条件里作为取值参与计算——这和 Sass / Less 的编译期变量是两回事。Sass 变量编译完就消失了，CSS 变量活到运行结束。
 
 ```css
 :root {
@@ -314,7 +314,9 @@ html { scroll-behavior: smooth; }
 .fade-up { animation: fade-up 0.3s ease both; }
 ```
 
-**性能要点**：`transform` 与 `opacity` 只触发**合成**，不触发重排/重绘，是唯一能稳定跑满 60fps 的属性。动画里改 `width` / `top` / `margin` 会触发布局，务必避免。
+**性能要点**：`transform` 与 `opacity` 只触发**合成**，不触发布局与重绘，是最可靠的高性能动画属性。动画里改 `width` / `top` / `margin` 会触发布局，务必避免。
+
+> 补充：`filter`、`clip-path`、`backdrop-filter` 等属性在多数浏览器中也能走合成层，但支持度与表现不如 `transform`/`opacity` 稳定，性能敏感场景仍优先用后两者。
 
 ### `@starting-style` 与 `transition-behavior`（新特性）
 

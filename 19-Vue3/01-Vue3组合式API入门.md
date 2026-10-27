@@ -359,6 +359,8 @@ const theme = inject<Ref<string>>('theme', ref('light'));
 
 Vuex 在 Vue 3 时代被 Pinia 取代。Pinia 无 mutations、类型推断好、支持组合式写法。
 
+> 版本提示：Pinia 当前已到 **4.x**（peer 依赖 `vue ^3.5.11`）。`defineStore` / `storeToRefs` 这两个核心 API 自 2.x 起保持稳定，下面示例在 2.x ~ 4.x 均可用。
+
 ```ts
 // stores/counter.ts
 import { defineStore } from 'pinia';
@@ -397,7 +399,9 @@ store.inc();
 
 **坑**：直接 `const { count } = store` 会丢失响应性，必须 `storeToRefs`。方法可以正常解构。
 
-## 九、路由 Vue Router 4
+## 九、路由 Vue Router
+
+> Vue Router 从 4.x 起统一服务于 Vue 3（当前已到 5.x）。下面展示的 `createRouter` / `useRouter` / `useRoute` 这套 API 是 4.x 起引入的组合式写法，5.x 继续沿用。
 
 ```ts
 // router/index.ts
@@ -474,6 +478,18 @@ onMounted(execute);
 
 对比 Vue 2：同样的复用要写 mixin，而 mixin 存在**命名冲突、来源不清、隐式依赖**三大问题。Composables 彻底解决了这些。
 
+> **注意竞态**：上面的 `execute()` 是手动调用的，如果同一组件内连续触发多次（例如搜索框快速输入），先发的请求可能后返回并覆盖新结果。需要时在 composable 内部维护一个自增序号，只接受最新一次的结果：
+>
+> ```ts
+> let seq = 0;
+> async function execute() {
+>   const current = ++seq;
+>   const res = await fetch(url);
+>   if (current !== seq) return;    // 已有更新的请求，丢弃本次结果
+>   data.value = await res.json();
+> }
+> ```
+
 ### 编写规范
 
 - 文件名以 `use` 开头（`useUser.ts`）
@@ -514,4 +530,4 @@ onMounted(execute);
 - Vue 3 官方文档：<https://cn.vuejs.org/guide/introduction.html>
 - 组合式 API FAQ：<https://cn.vuejs.org/guide/extras/composition-api-faq.html>
 - Pinia：<https://pinia.vuejs.org/zh/>
-- Vue Router 4：<https://router.vuejs.org/zh/>
+- Vue Router：<https://router.vuejs.org/zh/>

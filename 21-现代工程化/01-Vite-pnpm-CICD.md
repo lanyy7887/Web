@@ -107,8 +107,14 @@ webpack 的工作方式：启动时把**全部**源码打包成 bundle，再起 
 
 Vite 的方式：
 
-- **开发**：不打包，直接利用浏览器原生 ESM 按需加载；改动只失效单个模块（真正的 HMR 即时）。预构建仅处理 `node_modules`（用 esbuild）。
-- **生产**：用 **Rollup** 打包，输出高度优化。
+- **开发**：不打包，直接利用浏览器原生 ESM 按需加载；改动只失效单个模块（真正的 HMR 即时）。依赖预构建只处理 `node_modules`。
+- **生产**：打包、压缩、分块、Tree-shaking，输出高度优化的产物。
+
+> **版本演进（重要）**：Vite 早期是"双打包器"架构——开发用 **esbuild**（快），生产用 **Rollup**（优化好）。
+>
+> **Vite 8（2026-03 发布）起改为单一打包器 [Rolldown](https://rolldown.rs/)**（Rust 实现，兼容 Rollup 插件 API），构建速度提升 10–30 倍，同时消除了两套管线的不一致问题。安装体积比 Vite 7 大约 +15MB。
+>
+> 对使用者而言，**多数项目升级无需改配置**（官方提供兼容层自动转换 `esbuild` / `rollupOptions`）。但如果你看到旧教程写"生产用 Rollup"，那是 Vite 8 之前的说法。
 
 | 对比项 | webpack | Vite |
 |---|---|---|
@@ -148,7 +154,7 @@ export default defineConfig({
     target: 'es2022',
     sourcemap: false,
     chunkSizeWarningLimit: 800,
-    rollupOptions: {
+    rollupOptions: {            // Vite 8 下由兼容层转译为 Rolldown 配置，写法保持不变
       output: {
         manualChunks: {
           vendor: ['vue', 'vue-router', 'pinia'],
@@ -200,9 +206,9 @@ pnpm preview        # 本地预览产物
 
 ## 四、代码质量门禁
 
-### 1. ESLint（新版扁平配置）
+### 1. ESLint（扁平配置）
 
-ESLint 9 起用 `eslint.config.js`，取代旧的 `.eslintrc`：
+**ESLint 9 起扁平配置成为默认，ESLint 10 彻底移除了 eslintrc 体系**——`.eslintrc.*` 与 `.eslintignore` 均已失效，`eslint.config.js` 是唯一选项（ESLint 9.x 已于 2026-08 停止维护）：
 
 ```js
 // eslint.config.js
@@ -226,6 +232,8 @@ export default [
 
 React 项目额外加 `eslint-plugin-react-hooks` 与 `react-refresh`。
 
+> 迁移注意：ESLint 10 还改了配置文件查找规则——从**每个被检查文件所在目录**向上找 `eslint.config.*`，而不再只看当前工作目录。这对 monorepo 是好消息（各子包可以有自己的配置），但如果你依赖旧的"只读根目录配置"行为，升级后要检查一遍。Node 版本要求 `^20.19.0 || ^22.13.0 || >=24`。
+
 ### 2. Prettier
 
 ```json
@@ -238,6 +246,8 @@ React 项目额外加 `eslint-plugin-react-hooks` 与 `react-refresh`。
 ```
 
 ### 3. 提交前自动跑：lint-staged + husky
+
+> `typecheck` 脚本：Vue 项目用 `vue-tsc --noEmit`（能理解 `.vue` 单文件组件）；纯 TS / React 项目用 `tsc --noEmit`；若已升级到 TypeScript 7，替换为 `tsgo --noEmit`。
 
 ```json
 // package.json
@@ -330,7 +340,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22      # 需 ≥22.13（ESLint 10 要求）；Vite 8 要求 ≥22.12
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -396,7 +406,7 @@ src/
 - [ ] `pnpm` + lockfile 入库
 - [ ] Vite + TS，`tsconfig` 开 `strict`
 - [ ] 路径别名 `@` 同时配到 `vite.config` 与 `tsconfig`
-- [ ] ESLint 9 扁平配置 + Prettier
+- [ ] ESLint 扁平配置 + Prettier
 - [ ] husky + lint-staged + commitlint
 - [ ] Vitest + Playwright
 - [ ] GitHub Actions：lint / typecheck / test / build

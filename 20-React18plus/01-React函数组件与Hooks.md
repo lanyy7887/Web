@@ -122,20 +122,25 @@ const [error, setError] = useState<Error | null>(null);
 
 useEffect(() => {
   const ctrl = new AbortController();
+  let aborted = false;          // 标记本次 effect 是否已被清理
+
   setLoading(true);
   setError(null);
 
   fetch(`/api/user/${id}`, { signal: ctrl.signal })
     .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-    .then(setData)
-    .catch(e => { if (e.name !== 'AbortError') setError(e); })
-    .finally(() => setLoading(false));
+    .then(res => { if (!aborted) setData(res); })
+    .catch(e => { if (!aborted) setError(e); })
+    .finally(() => { if (!aborted) setLoading(false); });   // 关键：别让旧请求关掉新请求的 loading
 
-  return () => ctrl.abort();   // 清理：防止竞态与内存泄漏
+  return () => {
+    aborted = true;      // 先标记，再中断
+    ctrl.abort();
+  };
 }, [id]);
 ```
 
-**竞态**：`AbortController` 是最简洁的解法。数据请求通常建议直接用 TanStack Query 或 SWR（见第九节）。
+**为什么需要 `aborted` 标志**：`abort()` 只会让请求以 `AbortError` 失败，`finally` 依然会执行。当 `id` 快速切换时，旧请求的 `finally` 会把**新请求**正在展示的 loading 状态误关掉，界面看起来"加载完了但没数据"。`AbortController` 负责取消网络请求，`aborted` 标志负责拦截迟到的状态更新，两者缺一不可。
 
 ### 4. `useRef`
 
@@ -212,13 +217,21 @@ export function useFetch<T>(url: string) {
 
   useEffect(() => {
     const ctrl = new AbortController();
+    let aborted = false;
+
     setLoading(true);
+    setError(null);
+
     fetch(url, { signal: ctrl.signal })
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then(setData)
-      .catch(e => { if (e.name !== 'AbortError') setError(e); })
-      .finally(() => setLoading(false));
-    return () => ctrl.abort();
+      .then(res => { if (!aborted) setData(res); })
+      .catch(e => { if (!aborted) setError(e); })
+      .finally(() => { if (!aborted) setLoading(false); });
+
+    return () => {
+      aborted = true;
+      ctrl.abort();
+    };
   }, [url]);
 
   return { data, loading, error };
@@ -292,6 +305,8 @@ const { data, isLoading, error } = useQuery({
 
 ## 八、React 18 / 19 的新东西
 
+> 版本现状：React 已到 **19.x**。18 与 19 之间**没有破坏性的大改**，下面这些能力是叠加关系，18 项目可平滑升级到 19。
+
 | 特性 | 作用 |
 |---|---|
 | **并发渲染** | 渲染可中断，交互不被大列表阻塞 |
@@ -318,7 +333,7 @@ RSC 是当前最大的方向性变化：**"默认服务端渲染、仅在需要�
 | `defaultProps` | 默认参数 |
 | `setState` | `setX`（不可就地修改对象） |
 | `connect()` + Redux | `useSelector` / Zustand |
-| `class ErrorBoundary` | 仍需 class（唯一保留的 class 场景） |
+| `class ErrorBoundary` | 仍主要用 class（ErrorBoundary 这一场景 class 仍是标准解法） |
 
 ## 十、小结
 

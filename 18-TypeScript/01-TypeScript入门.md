@@ -56,7 +56,8 @@ const add = (a, b) => a + b;
 
 逐项说明：
 
-- `target: ES2022`：产物语法级别。现代浏览器和 Node 18+ 全部支持，不必降到 ES5。
+- `target: ES2022`：产物语法级别。现代浏览器与 Node 18+ 均可直接执行，不必降到 ES5。
+  > 注意区分：`target` 是**产物语法**的下限，与你的**构建工具**所要求的 Node 版本是两件事。例如 Vite 8 要求 Node 20.19+ / 22.12+ 才能运行，但它产出的代码仍可以是 ES2022。
 - `moduleResolution: "bundler"`：配合 Vite / esbuild 时代的解析规则，支持 `exports` 字段、无扩展名导入。
 - `strict: true`：一次性开启 `strictNullChecks`、`noImplicitAny` 等一整套严格模式。**新项目务必打开**，中途打开代价极高。
 - `noUncheckedIndexedAccess`：`arr[0]` 的类型变成 `T | undefined`，强制处理越界。严格但值得。
@@ -68,6 +69,13 @@ const add = (a, b) => a + b;
 ```bash
 npx tsc --noEmit
 ```
+
+> **版本提示（2026）**：TypeScript 7 起编译器已用 Go 重写（项目代号 Corsa），**类型系统语义与 `tsconfig` 配置完全兼容**，但你学到的东西一句都不用改；变化只在**怎么跑**。
+>
+> - TypeScript 5.x / 6.x：`npx tsc --noEmit`
+> - TypeScript 7+：改用原生二进制 `tsgo`（`npx tsgo --noEmit`），速度提升约 9–10 倍，内存占用下降约 60–70%
+>
+> 迁移期建议两个都跑一遍，按**诊断码**（如 `TS2322`）而非错误文案比对结果——报错码不变，文案会变。另外 TS7 不再提供 `ts.createProgram()` 这类编译器 API，依赖它做代码生成的工具（如 ts-morph）仍需留在旧版 `typescript` 上。
 
 ## 四、核心概念速览
 
