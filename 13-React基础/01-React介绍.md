@@ -5,6 +5,18 @@ publish: true
 
 <ArticleTopAd></ArticleTopAd>
 
+> ⚠️ **时效提示（2026 年更新）**：本章及整个「13-React基础」写于 **React 15 时代**。今天 React 只有一种主流写法：**函数组件 + Hooks**。
+>
+> 本章的**概念**（虚拟 DOM、diff 算法、单向数据流、组件化）依然成立，可以读；但以下 API **已全部废弃或移除**，请直接跳过：
+>
+> - `getDefaultProps` / `getInitialState` —— React 0.14 时代 API，早已移除，现用**默认参数**与 `useState`
+> - `componentWillMount` / `componentWillReceiveProps` / `componentWillUpdate` —— React 16.3 弃用、18 移除
+> - `bind(this)` —— 函数组件无 `this`，不再需要
+> - `React.createClass` —— React 16 移除
+> - class 生命周期 —— 改由 `useEffect` 承担
+>
+> 新项目请直接看 **[20-React18+] 函数组件与 Hooks** 章节，该章附有旧 API → Hooks 的完整对照表。
+
 
 
 

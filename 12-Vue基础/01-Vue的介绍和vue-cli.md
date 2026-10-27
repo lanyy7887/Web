@@ -5,6 +5,18 @@ publish: true
 
 <ArticleTopAd></ArticleTopAd>
 
+> ⚠️ **时效提示（2026 年更新）**：本章及整个「12-Vue基础」基于 **Vue 2 + vue-cli**。Vue 2 已于 **2023-12-31 停止官方维护**，`vue-cli` 亦已停止维护。
+>
+> 本章的**思想**（MVVM、数据驱动、组件化、生命周期概念）依然成立，可以读；但**代码不要直接照抄**。以下写法在 Vue 3 中已移除或改写：
+>
+> - `filters` 过滤器 —— **已删除**，改用 `computed`
+> - `beforeDestroy` / `destroyed` —— 改为 `onBeforeUnmount` / `onUnmounted`
+> - `this.$refs` 全开放访问 —— 改为 `ref` + `defineExpose`
+> - `Vue.use` / `this.$router` —— 改为 `useRouter()` 等组合式函数
+> - Vuex —— 改用 **Pinia**
+>
+> 新项目请直接看 **[19-Vue3] 组合式 API** 章节，该章附有完整的 Vue 2 → Vue 3 对照表。
+
 
 
 
